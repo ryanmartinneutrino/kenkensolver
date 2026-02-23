@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 from dataclasses import dataclass
 from itertools import permutations, product
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -220,6 +221,97 @@ def interactive_puzzle() -> KenKenPuzzle:
 def print_grid(grid: List[List[int]]) -> None:
     for row in grid:
         print(" ".join(str(v) for v in row))
+
+
+def _random_latin_square(n: int, rng: random.Random) -> List[List[int]]:
+    base = [[((r + c) % n) + 1 for c in range(n)] for r in range(n)]
+    row_perm = list(range(n))
+    col_perm = list(range(n))
+    val_perm = list(range(1, n + 1))
+    rng.shuffle(row_perm)
+    rng.shuffle(col_perm)
+    rng.shuffle(val_perm)
+    return [[val_perm[base[row_perm[r]][col_perm[c]] - 1] for c in range(n)] for r in range(n)]
+
+
+def _neighbors(cell: Cell, n: int) -> List[Cell]:
+    r, c = cell
+    out = []
+    for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        nr, nc = r + dr, c + dc
+        if 0 <= nr < n and 0 <= nc < n:
+            out.append((nr, nc))
+    return out
+
+
+def _choose_cage_rule(values: List[int], rng: random.Random) -> Tuple[str, int]:
+    if len(values) == 1:
+        return "=", values[0]
+
+    possible: List[Tuple[str, int]] = []
+    possible.append(("+", sum(values)))
+
+    product_value = 1
+    for v in values:
+        product_value *= v
+    possible.append(("*", product_value))
+
+    if len(values) == 2:
+        a, b = values
+        possible.append(("-", abs(a - b)))
+        big, small = max(a, b), min(a, b)
+        if small != 0 and big % small == 0:
+            possible.append(("/", big // small))
+
+    return rng.choice(possible)
+
+
+def generate_random_puzzle(size: int, seed: Optional[int] = None) -> KenKenPuzzle:
+    if not (3 <= size <= 9):
+        raise ValueError("Grid size must be between 3 and 9.")
+    rng = random.Random(seed)
+    solution = _random_latin_square(size, rng)
+
+    unassigned = {(r, c) for r in range(size) for c in range(size)}
+    cages: List[Cage] = []
+
+    while unassigned:
+        start = rng.choice(tuple(unassigned))
+        unassigned.remove(start)
+        desired_size = rng.choice([1, 2, 2, 3])
+        cage_cells = [start]
+
+        while len(cage_cells) < desired_size:
+            frontier = []
+            for cell in cage_cells:
+                for nb in _neighbors(cell, size):
+                    if nb in unassigned and nb not in frontier:
+                        frontier.append(nb)
+            if not frontier:
+                break
+            chosen = rng.choice(frontier)
+            unassigned.remove(chosen)
+            cage_cells.append(chosen)
+
+        values = [solution[r][c] for r, c in cage_cells]
+        op, target = _choose_cage_rule(values, rng)
+        cages.append(Cage(target=target, op=op, cells=tuple(cage_cells)))
+
+    return KenKenPuzzle(size=size, cages=cages)
+
+
+def puzzle_to_dict(puzzle: KenKenPuzzle) -> Dict:
+    return {
+        "size": puzzle.size,
+        "cages": [
+            {
+                "target": cage.target,
+                "op": cage.op,
+                "cells": [[r, c] for r, c in cage.cells],
+            }
+            for cage in puzzle.cages
+        ],
+    }
 
 
 def main() -> None:

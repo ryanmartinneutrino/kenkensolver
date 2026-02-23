@@ -1,6 +1,6 @@
 import unittest
 
-from kenken_solver import KenKenPuzzle, KenKenSolver
+from kenken_solver import KenKenPuzzle, KenKenSolver, generate_random_puzzle
 
 
 class KenKenSolverTest(unittest.TestCase):
@@ -31,6 +31,11 @@ class KenKenSolverTest(unittest.TestCase):
                 [2, 3, 4, 1],
             ],
         )
+
+    def test_random_puzzle_generation_is_solvable(self):
+        puzzle = generate_random_puzzle(size=6, seed=1234)
+        solver = KenKenSolver(puzzle)
+        self.assertTrue(solver.solve())
 
 
 if __name__ == "__main__":

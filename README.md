@@ -11,6 +11,12 @@ Offline KenKen solver for Linux laptops (air-gapped compatible). Supports grid s
   - **Interactive mode** (build puzzle directly in terminal).
 
 ## Run
+  - **JSON puzzle input** (good for importing from websites manually),
+  - **Terminal interactive mode** (build puzzle in shell), or
+  - **GUI editor mode** for entering/editing cage IDs and rules.
+- Includes **random puzzle generation** for quick testing.
+
+## CLI Run
 
 ```bash
 python3 kenken_solver.py --input examples/sample_4x4.json
@@ -21,6 +27,18 @@ or
 ```bash
 python3 kenken_solver.py --interactive
 ```
+
+## GUI Run
+
+```bash
+python3 kenken_gui.py
+```
+
+GUI workflow:
+- Choose grid size (3-9).
+- Either click **New Grid** and manually assign cage IDs + rules, or click **Generate Random Puzzle**.
+- Rules format: one per line: `ID OP TARGET` (example: `3 + 10`).
+- Click **Solve** to compute and display the solution grid.
 
 ## JSON format
 
@@ -41,4 +59,5 @@ python3 kenken_solver.py --interactive
 
 ```bash
 python3 -m unittest -v
+python3 -m unittest discover -s tests -v
 ```
