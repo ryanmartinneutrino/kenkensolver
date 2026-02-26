@@ -170,8 +170,6 @@ class KenKenApp:
         block = BlockDef(block_id=next_id, color=BLOCK_COLORS[(next_id - 1) % len(BLOCK_COLORS)])
         self.blocks[next_id] = block
         self.current_block_id = next_id
-        self.op_var.set("+")
-        self.target_var.set("")
         self.solution_grid = None
         self.redraw()
         self.status_var.set(f"Created block #{next_id}. Click cells to add/remove from this block.")
@@ -419,14 +417,21 @@ class KenKenApp:
             if block.rule_cell and block.target is not None:
                 rr, cc = block.rule_cell
                 x0, y0 = cc * cell_px, rr * cell_px
-                label = str(block.target) if block.op == "=" else f"{block.target}{block.op}"
-                self.canvas.create_text(
-                    x0 + 6,
-                    y0 + 6,
-                    text=label,
-                    anchor="nw",
-                    font=("Arial", max(8, cell_px // 6)),
-                )
+                if block.op == "=":
+                    self.canvas.create_text(
+                        x0 + cell_px / 2,
+                        y0 + cell_px / 2 + 8,
+                        text=str(block.target),
+                        font=("Arial", max(14, cell_px // 2), "bold"),
+                    )
+                else:
+                    self.canvas.create_text(
+                        x0 + 6,
+                        y0 + 6,
+                        text=f"{block.target}{block.op}",
+                        anchor="nw",
+                        font=("Arial", max(8, cell_px // 6)),
+                    )
 
         if self.solution_grid:
             for r in range(n):
